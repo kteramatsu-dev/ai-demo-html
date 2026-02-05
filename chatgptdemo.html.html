@@ -1,0 +1,1447 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="150名規模の会社向け：ChatGPT vs Gemini（または両方）を加点形式で選ぶ、導入判断シミュレーター。" />
+  <meta name="color-scheme" content="dark light" />
+  <title>社内汎用AI：ChatGPT vs Gemini 導入判断（加点式）</title>
+  <style>
+    :root{
+      --bg0:#070A12;
+      --bg1:#0B1022;
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.085);
+      --text:#EAF0FF;
+      --muted:rgba(234,240,255,.72);
+      --line:rgba(255,255,255,.12);
+      --shadow: 0 16px 44px rgba(0,0,0,.45);
+      --r:16px;
+
+      --c-chat:#7CFFB2;     /* ChatGPT */
+      --c-gem:#8BB7FF;      /* Gemini */
+      --c-both:#F7D77B;
+      --warn:#FF7A7A;
+
+      --ease: cubic-bezier(.2,.8,.2,1);
+      --dur: 520ms;
+    }
+
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg0:#F6F7FF;
+        --bg1:#EDF0FF;
+        --card:rgba(0,0,0,.04);
+        --card2:rgba(0,0,0,.06);
+        --text:#0B1022;
+        --muted:rgba(11,16,34,.72);
+        --line:rgba(0,0,0,.12);
+        --shadow: 0 18px 44px rgba(0,0,0,.12);
+      }
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 600px at 15% 10%, rgba(124,255,178,.18), transparent 55%),
+        radial-gradient(700px 520px at 80% 15%, rgba(139,183,255,.18), transparent 56%),
+        radial-gradient(900px 640px at 75% 85%, rgba(247,215,123,.15), transparent 56%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    a{ color: inherit; text-decoration-color: rgba(255,255,255,.35); }
+    @media (prefers-color-scheme: light){ a{ text-decoration-color: rgba(0,0,0,.25); } }
+    a:hover{ text-decoration-color: currentColor; }
+
+    .wrap{
+      width:min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 72px;
+    }
+
+    /* --- Hero --- */
+    .hero{
+      position:relative;
+      padding: 28px 18px 10px;
+      border:1px solid var(--line);
+      border-radius: calc(var(--r) + 6px);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      isolation:isolate;
+    }
+    .hero::before,
+    .hero::after{
+      content:"";
+      position:absolute;
+      width: 540px;
+      height: 540px;
+      border-radius: 999px;
+      filter: blur(22px);
+      opacity: .8;
+      z-index:-1;
+      animation: drift 12s var(--ease) infinite alternate;
+    }
+    .hero::before{ left:-220px; top:-260px; background: radial-gradient(circle at 30% 30%, rgba(124,255,178,.60), rgba(124,255,178,.0) 65%); }
+    .hero::after{ right:-240px; top:-320px; background: radial-gradient(circle at 40% 40%, rgba(139,183,255,.60), rgba(139,183,255,.0) 68%); animation-duration: 14s; }
+
+    @keyframes drift{
+      from{ transform: translate3d(0,0,0) scale(1); }
+      to{ transform: translate3d(60px, 48px, 0) scale(1.05); }
+    }
+
+    .heroTop{
+      display:flex;
+      gap: 14px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      letter-spacing: .02em;
+      color: var(--muted);
+    }
+    .dots{
+      display:inline-flex; gap:6px; align-items:center;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+    }
+    .dot.chat{ background: color-mix(in srgb, var(--c-chat) 65%, transparent); border-color: color-mix(in srgb, var(--c-chat) 55%, transparent); }
+    .dot.gem{ background: color-mix(in srgb, var(--c-gem) 65%, transparent); border-color: color-mix(in srgb, var(--c-gem) 55%, transparent); }
+    .dot.both{ background: color-mix(in srgb, var(--c-both) 65%, transparent); border-color: color-mix(in srgb, var(--c-both) 55%, transparent); }
+
+    h1{
+      margin: 14px 0 8px;
+      font-size: clamp(22px, 3.1vw, 36px);
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+    }
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      line-height:1.65;
+      max-width: 78ch;
+    }
+
+    .ctaRow{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top: 12px;
+    }
+    button, .btn{
+      appearance:none;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-weight: 650;
+      letter-spacing: .01em;
+      cursor:pointer;
+      transition: transform var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+      user-select:none;
+    }
+    button:hover, .btn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.10); }
+    button:active, .btn:active{ transform: translateY(0px) scale(.99); }
+    .primary{
+      border-color: color-mix(in srgb, var(--c-both) 40%, var(--line));
+      background: linear-gradient(180deg, rgba(247,215,123,.18), rgba(255,255,255,.04));
+    }
+
+    .mini{
+      font-size: 12px;
+      color:var(--muted);
+      margin-top: 8px;
+    }
+
+    /* --- Layout / sections --- */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    @media (min-width: 960px){
+      .grid{ grid-template-columns: 1.2fr .8fr; gap: 16px; }
+    }
+
+    .card{
+      border:1px solid var(--line);
+      background: var(--card);
+      border-radius: var(--r);
+      box-shadow: 0 12px 32px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      align-items:flex-start;
+    }
+    .cardHeader h2{
+      margin:0;
+      font-size: 15px;
+      letter-spacing: .01em;
+      line-height: 1.28;
+    }
+    .cardHeader .hint{
+      color:var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      max-width: 44ch;
+      text-align:right;
+    }
+    .cardBody{ padding: 14px; }
+
+    .pillRow{
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin: 2px 0 0;
+    }
+    .pill{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(255,255,255,.04);
+    }
+    .pill strong{ color: var(--text); }
+    .pill.chat{ border-color: color-mix(in srgb, var(--c-chat) 36%, var(--line)); }
+    .pill.gem{ border-color: color-mix(in srgb, var(--c-gem) 36%, var(--line)); }
+    .pill.both{ border-color: color-mix(in srgb, var(--c-both) 42%, var(--line)); }
+
+    /* --- Questionnaire --- */
+    .q{
+      padding: 12px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      margin-bottom: 12px;
+    }
+    .q:last-child{ margin-bottom:0; }
+    .qTitle{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      justify-content:space-between;
+      margin-bottom: 10px;
+    }
+    .qTitle h3{
+      margin:0;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .qTitle small{
+      color:var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .opts{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    @media (min-width: 680px){
+      .opts{ grid-template-columns: 1fr 1fr; }
+    }
+    .opt{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      cursor:pointer;
+      transition: transform var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+      position:relative;
+      overflow:hidden;
+    }
+    .opt:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.06); }
+    .opt input{ margin-top: 2px; }
+    .opt .lbl{
+      display:flex; flex-direction:column; gap: 4px;
+      min-width: 0;
+    }
+    .opt .lbl b{ font-size: 13px; line-height: 1.25; }
+    .opt .lbl span{ color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .gain{
+      margin-left:auto;
+      display:flex;
+      gap: 6px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      padding-left: 6px;
+    }
+    .tag{
+      font-size: 11px;
+      border-radius: 999px;
+      padding: 5px 8px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .tag.chat{ border-color: color-mix(in srgb, var(--c-chat) 46%, var(--line)); color: color-mix(in srgb, var(--c-chat) 75%, var(--text)); }
+    .tag.gem{ border-color: color-mix(in srgb, var(--c-gem) 46%, var(--line)); color: color-mix(in srgb, var(--c-gem) 75%, var(--text)); }
+    .tag.both{ border-color: color-mix(in srgb, var(--c-both) 56%, var(--line)); color: color-mix(in srgb, var(--c-both) 80%, var(--text)); }
+
+    /* --- Sidebar score --- */
+    .scoreTop{
+      display:flex;
+      gap: 10px;
+      justify-content:space-between;
+      align-items:flex-end;
+      margin-bottom: 10px;
+    }
+    .scoreTop h2{
+      margin:0;
+      font-size: 15px;
+    }
+    .scoreTop .asof{
+      color:var(--muted);
+      font-size: 12px;
+      text-align:right;
+      line-height: 1.35;
+    }
+
+    .meter{
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      margin-bottom: 12px;
+    }
+    .meter:last-child{ margin-bottom: 0; }
+    .meterHead{
+      display:flex; gap:10px;
+      justify-content:space-between; align-items:center;
+      margin-bottom: 10px;
+    }
+    .meterHead b{ font-size: 13px; }
+    .meterHead span{ color:var(--muted); font-size: 12px; }
+    .bar{
+      position:relative;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      overflow:hidden;
+      border: 1px solid var(--line);
+    }
+    .fill{
+      position:absolute; left:0; top:0; bottom:0;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 900ms var(--ease);
+    }
+    .fill.chat{ background: linear-gradient(90deg, color-mix(in srgb, var(--c-chat) 78%, transparent), rgba(255,255,255,.06)); }
+    .fill.gem{ background: linear-gradient(90deg, color-mix(in srgb, var(--c-gem) 78%, transparent), rgba(255,255,255,.06)); }
+
+    .reco{
+      border: 1px dashed color-mix(in srgb, var(--c-both) 50%, var(--line));
+      background: linear-gradient(180deg, rgba(247,215,123,.14), rgba(255,255,255,.03));
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .reco h3{
+      margin:0 0 6px;
+      font-size: 14px;
+    }
+    .reco p{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 12.5px;
+    }
+
+    /* --- Cost box --- */
+    .costGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 680px){
+      .costGrid{ grid-template-columns: 1fr 1fr; }
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+    label{ font-size: 12px; color: var(--muted); }
+    input[type="number"], select{
+      padding: 10px 10px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      outline:none;
+      transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+    }
+    input[type="number"]:focus, select:focus{
+      border-color: color-mix(in srgb, var(--c-both) 55%, var(--line));
+      background: rgba(255,255,255,.06);
+    }
+    .costOut{
+      margin-top: 12px;
+      border-top:1px solid var(--line);
+      padding-top: 12px;
+      display:grid;
+      gap: 10px;
+    }
+    .costRow{
+      display:flex; gap:10px;
+      justify-content:space-between;
+      align-items:baseline;
+    }
+    .costRow b{ font-size: 13px; }
+    .costRow span{ font-variant-numeric: tabular-nums; }
+
+    .note{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    /* --- Reveal animation --- */
+    .reveal{
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 650ms var(--ease), transform 650ms var(--ease);
+    }
+    .reveal.on{
+      opacity: 1;
+      transform: translateY(0px);
+    }
+
+    /* --- Footer --- */
+    footer{
+      margin-top: 16px;
+      padding: 18px 14px;
+      border:1px solid var(--line);
+      border-radius: var(--r);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 12px;
+    }
+    footer h2{ margin:0 0 6px; font-size: 13px; color: var(--text); }
+    .src{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    @media (min-width: 820px){
+      .src{ grid-template-columns: 1fr 1fr; }
+    }
+    .src a{
+      display:block;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      text-decoration:none;
+    }
+    .src a:hover{ background: rgba(255,255,255,.06); }
+    .src b{ color: var(--text); font-weight: 650; display:block; margin-bottom: 2px; }
+    .src span{ display:block; }
+
+    .tiny{
+      margin-top: 12px;
+      border-top:1px solid var(--line);
+      padding-top: 12px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    /* --- Print --- */
+    @media print{
+      body{ background:#fff; color:#111; }
+      .hero::before,.hero::after{ display:none; }
+      button{ display:none; }
+      .card, .hero, footer{ box-shadow:none; }
+      a{ text-decoration: underline; color:#111; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <section class="hero reveal">
+      <div class="heroTop">
+        <div class="badge">
+          <span class="dots" aria-hidden="true">
+            <span class="dot chat"></span><span class="dot gem"></span><span class="dot both"></span>
+          </span>
+          <span>加点式で「社内の汎用AI」を選ぶ：ChatGPT / Gemini / 両方</span>
+        </div>
+        <div class="badge">対象：150名規模（目安）・GitHub公開OK（外部依存なし）</div>
+      </div>
+
+      <h1>ChatGPT vs Gemini：<br/>導入しやすさ・コスト・浸透まで含めて、今の自社に合う方を「点数」で決める</h1>
+      <p class="lead">
+        どちらが“強い”かではなく、<b>いまの社内環境・データ要件・主要タスク・研修のやり方</b>で最適解は変わります。<br/>
+        このページは、条件入力→自動採点→推奨（片方 or 両方）までを1枚で完結させるためのテンプレです。
+      </p>
+
+      <div class="ctaRow">
+        <button class="primary" id="btnReset" type="button">入力をリセット</button>
+        <button id="btnSampleM365" type="button">サンプル（Microsoft 365寄り）</button>
+        <button id="btnSampleWS" type="button">サンプル（Google Workspace寄り）</button>
+        <a class="btn" href="#sources">根拠リンク（Sources）へ</a>
+      </div>
+
+      <div class="mini">※点数は「導入のしやすさ」重視の実務向け。モデル性能の優劣を断定するものではありません。</div>
+    </section>
+
+    <div class="grid">
+      <!-- LEFT: questionnaire -->
+      <main class="card reveal" id="formCard">
+        <div class="cardHeader">
+          <div>
+            <h2>1) 条件入力（加点式）</h2>
+            <div class="pillRow" aria-label="採点の凡例">
+              <span class="pill chat"><strong>ChatGPT</strong>に加点</span>
+              <span class="pill gem"><strong>Gemini</strong>に加点</span>
+              <span class="pill both"><strong>両方</strong>（併用）を推しやすい条件</span>
+            </div>
+          </div>
+          <div class="hint">
+            「どっちが良い？」ではなく、<br/>「社内に刺さるのはどっち？」を見ます。
+          </div>
+        </div>
+
+        <div class="cardBody">
+          <!-- Q1 -->
+          <section class="q" data-q="suite">
+            <div class="qTitle">
+              <h3>社内の“主戦場”は？（メール/ファイル/会議/ID基盤）</h3>
+              <small>浸透度を最も左右します</small>
+            </div>
+            <div class="opts" role="radiogroup" aria-label="社内の主戦場">
+              <label class="opt">
+                <input type="radio" name="suite" checked
+                  data-chat="4" data-gem="0"
+                  data-reason-chat="Microsoft 365/SharePoint/OneDrive中心 → ChatGPT側の接続・活用設計が進めやすい"
+                  data-reason-gem="">
+                <div class="lbl">
+                  <b>Microsoft 365（Outlook / Teams / SharePoint / OneDrive）中心</b>
+                  <span>資料はSharePoint、ファイルはOneDrive、会議はTeamsが基本</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +4</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="suite"
+                  data-chat="0" data-gem="4"
+                  data-reason-chat=""
+                  data-reason-gem="Google Workspace（Gmail/Docs/Drive/Meet）中心 → Geminiが“日常の画面”に溶け込みやすい">
+                <div class="lbl">
+                  <b>Google Workspace（Gmail / Docs / Drive / Meet）中心</b>
+                  <span>社内の仕事が“ブラウザとWorkspace”に集約されている</span>
+                </div>
+                <div class="gain">
+                  <span class="tag gem">Gemini +4</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="suite"
+                  data-chat="2" data-gem="2"
+                  data-reason-chat="Microsoft/Googleが混在 → 片方に統一しにくい。ChatGPTは多アプリ接続で補完しやすい"
+                  data-reason-gem="Microsoft/Googleが混在 → 片方に統一しにくい。Workspace内作業はGeminiが強いことが多い">
+                <div class="lbl">
+                  <b>混在（MicrosoftもGoogleも、部署/役割でバラけている）</b>
+                  <span>一気に統一より“段階導入”の方が現実的</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +2</span>
+                  <span class="tag gem">Gemini +2</span>
+                  <span class="tag both">併用の芽</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="suite"
+                  data-chat="1" data-gem="1"
+                  data-reason-chat="紙/現場中心でも、横断型の検索・要約・Q&AでChatGPTは効く"
+                  data-reason-gem="紙/現場中心でも、メール/会議/文書系が残るならGeminiも効く">
+                <div class="lbl">
+                  <b>Office/Workspaceより“現場・紙・業務システム”が主戦場</b>
+                  <span>AIは「現場マニュアル/規程検索」から始めたい</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +1</span>
+                  <span class="tag gem">Gemini +1</span>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <!-- Q2 -->
+          <section class="q" data-q="tasks">
+            <div class="qTitle">
+              <h3>AIに任せたい“主な作業”は？</h3>
+              <small>成果が見える領域から入るのがコツ</small>
+            </div>
+            <div class="opts" role="radiogroup" aria-label="主な作業">
+              <label class="opt">
+                <input type="radio" name="tasks" checked
+                  data-chat="3" data-gem="1"
+                  data-reason-chat="議事録/規程/見積・提案/要約・分析・コーディングなど“横断型”の汎用タスクが多い"
+                  data-reason-gem="Docs/Sheets中心のタスクならGeminiも十分効く（ただし横断型はChatGPTが得意になりがち）">
+                <div class="lbl">
+                  <b>文章作成・要約・調査・Excel/分析・社内Q&A（横断型）</b>
+                  <span>部署をまたぐ“汎用事務”を薄く広く支援したい</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +3</span>
+                  <span class="tag gem">Gemini +1</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="tasks"
+                  data-chat="1" data-gem="3"
+                  data-reason-chat="Gmail/Docs/Meetの中で完結する作業が多い場合、ChatGPT単体より統合体験が勝つことがある"
+                  data-reason-gem="Gmail/Docs/Sheets/Meetのサイドパネル等で“その場”支援 → 習慣化しやすい">
+                <div class="lbl">
+                  <b>メール返信・資料ドラフト・会議要約（Workspace内で完結）</b>
+                  <span>“いつもの画面”でAIが出てくる体験を最重視</span>
+                </div>
+                <div class="gain">
+                  <span class="tag gem">Gemini +3</span>
+                  <span class="tag chat">ChatGPT +1</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="tasks"
+                  data-chat="3" data-gem="2"
+                  data-reason-chat="多アプリ連携（Slack/Drive/SharePoint/GitHub等）を前提に“業務横断の調査/作業”へ寄せやすい"
+                  data-reason-gem="Workspace深掘り＋Deep Research/エージェント系の要素が合う場合はGemini側も強い">
+                <div class="lbl">
+                  <b>複数ツールをまたぐ調査・ナレッジ検索（“社内検索AI”）</b>
+                  <span>規程、手順書、FAQ、議事録、案件情報を一括で探したい</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +3</span>
+                  <span class="tag gem">Gemini +2</span>
+                  <span class="tag both">併用の芽</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="tasks"
+                  data-chat="2" data-gem="2"
+                  data-reason-chat="現場/紙/画像/音声などが混ざると“汎用チャット＋分析”の出番が増える"
+                  data-reason-gem="会議・メール・文書が多い業務ならGeminiの統合体験が刺さりやすい">
+                <div class="lbl">
+                  <b>現場の問い合わせ対応・手順の標準化・教育（非デスク多め）</b>
+                  <span>「社員がAIに慣れる」こと自体が目的に近い</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +2</span>
+                  <span class="tag gem">Gemini +2</span>
+                  <span class="tag both">併用の芽</span>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <!-- Q3 -->
+          <section class="q" data-q="leader">
+            <div class="qTitle">
+              <h3>トップの意思（推進の強さ）は？</h3>
+              <small>ここが弱いと“使われないSaaS”になります</small>
+            </div>
+            <div class="opts" role="radiogroup" aria-label="トップの意思">
+              <label class="opt">
+                <input type="radio" name="leader" checked
+                  data-chat="5" data-gem="0"
+                  data-reason-chat="トップがChatGPT推し → 予算/意思決定/失敗許容が揃い、浸透しやすい"
+                  data-reason-gem="">
+                <div class="lbl">
+                  <b>トップがChatGPT推し（投資・運用ルールまで決める意思あり）</b>
+                  <span>「まず全社で使う」を言い切れる</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +5</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="leader"
+                  data-chat="0" data-gem="5"
+                  data-reason-chat=""
+                  data-reason-gem="トップがGemini推し → Google環境とのセット運用が進み、日常導線に乗りやすい">
+                <div class="lbl">
+                  <b>トップがGemini推し（Workspace活用を加速させたい）</b>
+                  <span>“社内の標準”として押し切れる</span>
+                </div>
+                <div class="gain">
+                  <span class="tag gem">Gemini +5</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="leader"
+                  data-chat="2" data-gem="2"
+                  data-reason-chat="トップは成果重視 → パイロットで勝ち筋のある方（or 両方）に寄せやすい"
+                  data-reason-gem="トップは成果重視 → パイロットで勝ち筋のある方（or 両方）に寄せやすい">
+                <div class="lbl">
+                  <b>トップは中立（成果が出た方に寄せる）</b>
+                  <span>パイロット設計が上手いほど勝てる</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +2</span>
+                  <span class="tag gem">Gemini +2</span>
+                  <span class="tag both">併用の芽</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="leader"
+                  data-chat="0" data-gem="0"
+                  data-reason-chat=""
+                  data-reason-gem="">
+                <div class="lbl">
+                  <b>トップは様子見（現場に任せる）</b>
+                  <span>浸透は遅い。まずは小さく勝ってから上に上げる</span>
+                </div>
+                <div class="gain">
+                  <span class="tag">加点なし（現実…）</span>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <!-- Q4 -->
+          <section class="q" data-q="govern">
+            <div class="qTitle">
+              <h3>データセンター／データ所在地の要件は？</h3>
+              <small>「何をどこまで入れて良いか」で運用が決まります</small>
+            </div>
+            <div class="opts" role="radiogroup" aria-label="データ所在地の要件">
+              <label class="opt">
+                <input type="radio" name="govern" checked
+                  data-chat="3" data-gem="1"
+                  data-reason-chat="ChatGPTのデータレジデンシーは“日本”を含む複数地域に対応（対象プラン/条件あり）"
+                  data-reason-gem="Workspaceのデータリージョンは条件次第（US/EU中心）。Gemini Enterprise（Google Cloud）側で満たす設計もあり得る">
+                <div class="lbl">
+                  <b>顧客/機密データの“国内保管（例：日本）”を強く求めたい</b>
+                  <span>契約・監査の観点で「出せないデータ」が多い</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +3</span>
+                  <span class="tag gem">Gemini +1</span>
+                  <span class="tag both">ケースにより併用</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="govern"
+                  data-chat="1" data-gem="1"
+                  data-reason-chat="レジデンシー要件が緩いなら、まずは“使い方ルール”整備が効く"
+                  data-reason-gem="レジデンシー要件が緩いなら、まずは“使い方ルール”整備が効く">
+                <div class="lbl">
+                  <b>国内限定までは不要（ただしログ/保管/学習利用は厳しく）</b>
+                  <span>データは学習に使わない・保持期間は短く、を求める</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +1</span>
+                  <span class="tag gem">Gemini +1</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="govern"
+                  data-chat="2" data-gem="2"
+                  data-reason-chat="“外部接続”や“Web検索”を切るなど、機能制限を前提にした運用設計が必要"
+                  data-reason-gem="“外部接続”や“Web検索”を切るなど、機能制限を前提にした運用設計が必要">
+                <div class="lbl">
+                  <b>データの扱いが厳格（部門別に入れる/入れないを分けたい）</b>
+                  <span>人事・法務・顧客情報は特に厳しい</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +2</span>
+                  <span class="tag gem">Gemini +2</span>
+                  <span class="tag both">併用の芽</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="govern"
+                  data-chat="0" data-gem="0"
+                  data-reason-chat=""
+                  data-reason-gem="">
+                <div class="lbl">
+                  <b>まだ決まっていない（これから整備）</b>
+                  <span>まず“入力禁止リスト”を作るところから</span>
+                </div>
+                <div class="gain">
+                  <span class="tag">加点なし</span>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <!-- Q5 -->
+          <section class="q" data-q="training">
+            <div class="qTitle">
+              <h3>社内研修・定着のやり方は？</h3>
+              <small>浸透度の差は“研修設計”で決まる</small>
+            </div>
+            <div class="opts" role="radiogroup" aria-label="研修・定着">
+              <label class="opt">
+                <input type="radio" name="training" checked
+                  data-chat="1" data-gem="1"
+                  data-reason-chat="全社研修＋週次Tipsで“使う文化”を作れる。どちらでも成果が出やすい"
+                  data-reason-gem="全社研修＋週次Tipsで“使う文化”を作れる。どちらでも成果が出やすい">
+                <div class="lbl">
+                  <b>全社研修（90分）＋部署別ユースケースづくり（2週間）</b>
+                  <span>活用例を“その部署の言葉”に落とし込む</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +1</span>
+                  <span class="tag gem">Gemini +1</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="training"
+                  data-chat="2" data-gem="0"
+                  data-reason-chat="ChatGPT側は“カスタムGPT/アプリ接続”で部門特化の教材を作りやすい"
+                  data-reason-gem="">
+                <div class="lbl">
+                  <b>“部門ごとの型（テンプレ/エージェント）”を先に配る</b>
+                  <span>現場の抵抗感を減らして、体験から入る</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +2</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="training"
+                  data-chat="0" data-gem="2"
+                  data-reason-chat=""
+                  data-reason-gem="Workspaceに統合された導線（Gmail/Docs/Meetなど）で“小さく毎日使う”が起きやすい">
+                <div class="lbl">
+                  <b>“毎日使う画面”にAIが出ることを最優先</b>
+                  <span>研修は最小、日常導線で勝つ</span>
+                </div>
+                <div class="gain">
+                  <span class="tag gem">Gemini +2</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="training"
+                  data-chat="0" data-gem="0"
+                  data-reason-chat=""
+                  data-reason-gem="">
+                <div class="lbl">
+                  <b>研修はほぼできない（忙しすぎる）</b>
+                  <span>使われないリスクが高い。まず少人数の“勝ち事例”を作る</span>
+                </div>
+                <div class="gain">
+                  <span class="tag">加点なし</span>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <!-- Q6 -->
+          <section class="q" data-q="budget">
+            <div class="qTitle">
+              <h3>追加コストへの許容は？（既存契約との相性）</h3>
+              <small>“追加の月額SaaS”に耐えられるか</small>
+            </div>
+            <div class="opts" role="radiogroup" aria-label="追加コスト">
+              <label class="opt">
+                <input type="radio" name="budget" checked
+                  data-chat="2" data-gem="0"
+                  data-reason-chat="追加SaaSでもOKなら、横断型の汎用AIとしてChatGPTを“単独導入”しやすい"
+                  data-reason-gem="">
+                <div class="lbl">
+                  <b>追加課金OK（効果が出るなら全社で払う）</b>
+                  <span>月額を投資として割り切れる</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +2</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="budget"
+                  data-chat="0" data-gem="3"
+                  data-reason-chat=""
+                  data-reason-gem="WorkspaceにGeminiが標準搭載/組み込みなら、追加費用を抑えつつ浸透を狙える">
+                <div class="lbl">
+                  <b>追加課金は最小にしたい（既存のWorkspace/Google契約を活かす）</b>
+                  <span>“できるだけ契約を増やしたくない”</span>
+                </div>
+                <div class="gain">
+                  <span class="tag gem">Gemini +3</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="budget"
+                  data-chat="1" data-gem="1"
+                  data-reason-chat="小さく始め、効果が出た部署へ段階的に拡大するなら、まずは両者の小規模比較が合理的"
+                  data-reason-gem="小さく始め、効果が出た部署へ段階的に拡大するなら、まずは両者の小規模比較が合理的">
+                <div class="lbl">
+                  <b>段階導入（10〜30名で検証→勝ち筋がある方に寄せる）</b>
+                  <span>“まずは費用を抑えて学ぶ”</span>
+                </div>
+                <div class="gain">
+                  <span class="tag chat">ChatGPT +1</span>
+                  <span class="tag gem">Gemini +1</span>
+                  <span class="tag both">併用の芽</span>
+                </div>
+              </label>
+
+              <label class="opt">
+                <input type="radio" name="budget"
+                  data-chat="0" data-gem="0"
+                  data-reason-chat=""
+                  data-reason-gem="">
+                <div class="lbl">
+                  <b>今は予算が出ない（無料・個人利用中心で試す）</b>
+                  <span>まずは“入力禁止”と“社内ルール”を固めるのが先</span>
+                </div>
+                <div class="gain">
+                  <span class="tag">加点なし</span>
+                </div>
+              </label>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <!-- RIGHT: score -->
+      <aside class="card reveal" id="scoreCard">
+        <div class="cardHeader">
+          <div class="scoreTop">
+            <h2>2) 現在のスコア</h2>
+            <div class="asof">根拠はページ下部に記載<br/><span id="asOfText">（最終更新：—）</span></div>
+          </div>
+        </div>
+        <div class="cardBody">
+          <div class="meter">
+            <div class="meterHead">
+              <b>ChatGPT</b>
+              <span><span id="scoreChat">0</span> 点</span>
+            </div>
+            <div class="bar" aria-label="ChatGPTスコアバー"><div class="fill chat" id="barChat"></div></div>
+          </div>
+
+          <div class="meter">
+            <div class="meterHead">
+              <b>Gemini</b>
+              <span><span id="scoreGem">0</span> 点</span>
+            </div>
+            <div class="bar" aria-label="Geminiスコアバー"><div class="fill gem" id="barGem"></div></div>
+          </div>
+
+          <div class="reco" aria-live="polite">
+            <h3 id="recoTitle">推奨：—</h3>
+            <p id="recoBody">条件を選ぶと、推奨理由がここに出ます。</p>
+          </div>
+
+          <div class="meter" style="margin-top:12px">
+            <div class="meterHead">
+              <b>推奨理由（あなたの選択から抽出）</b>
+              <span id="whyCount">0件</span>
+            </div>
+            <div id="whyList" class="note" style="margin-top:0">
+              <em>まだありません。</em>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Cost -->
+    <section class="card reveal" id="costCard" style="margin-top:14px">
+      <div class="cardHeader">
+        <div>
+          <h2>3) コストざっくり試算（任意）</h2>
+          <div class="pillRow">
+            <span class="pill"><strong>注意</strong>：価格は地域/契約/割引で変動します。<b>下の入力欄で自社条件に合わせて調整</b>してください。</span>
+          </div>
+        </div>
+        <div class="hint">
+          「比較のための概算」<br/>に使う想定です。
+        </div>
+      </div>
+
+      <div class="cardBody">
+        <div class="costGrid">
+          <div class="field">
+            <label for="users">対象ユーザー数（例：150）</label>
+            <input id="users" type="number" min="1" value="150" />
+          </div>
+
+          <div class="field">
+            <label for="currency">表示通貨（概算）</label>
+            <select id="currency">
+              <option value="USD" selected>USD（$）</option>
+              <option value="JPY">JPY（¥）</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="chatPlan">ChatGPTプラン（目安）</label>
+            <select id="chatPlan">
+              <option value="business" selected>ChatGPT Business（席課金）</option>
+              <option value="enterprise">ChatGPT Enterprise（要見積）</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="chatSeat">ChatGPT 1人あたり月額（USD）</label>
+            <input id="chatSeat" type="number" min="0" step="0.01" value="30" />
+          </div>
+
+          <div class="field">
+            <label for="gemPlan">Gemini側の想定</label>
+            <select id="gemPlan">
+              <option value="workspaceIncluded" selected>Google WorkspaceにGeminiが組み込み（増分ほぼゼロ想定）</option>
+              <option value="geminiBusiness">Gemini Business（席課金）</option>
+              <option value="geminiEnterprise">Gemini Enterprise（席課金）</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="gemSeat">Gemini 1人あたり月額（USD）</label>
+            <input id="gemSeat" type="number" min="0" step="0.01" value="21" />
+          </div>
+        </div>
+
+        <div class="costOut" aria-live="polite">
+          <div class="costRow">
+            <b>ChatGPT（概算/月）</b>
+            <span id="outChat">$—</span>
+          </div>
+          <div class="costRow">
+            <b>Gemini（概算/月）</b>
+            <span id="outGem">$—</span>
+          </div>
+          <div class="costRow">
+            <b>両方（概算/月）</b>
+            <span id="outBoth">$—</span>
+          </div>
+          <div class="note" id="costNote">
+            ※デフォルトは参考値です（Gemini Business= $21/席/月、Gemini Enterprise= $30/席/月など）。実際の見積は公式/販売店で確認してください。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rollout -->
+    <section class="card reveal" style="margin-top:14px">
+      <div class="cardHeader">
+        <div>
+          <h2>4) 浸透させるための“現実的”ロードマップ（150名の型）</h2>
+          <div class="pillRow">
+            <span class="pill both"><strong>重要</strong>：AIは「導入」より「定着」。<b>ルール×研修×ユースケース</b>で勝ちます。</span>
+          </div>
+        </div>
+        <div class="hint">テンプレとして、そのまま社内展開に転用OK</div>
+      </div>
+      <div class="cardBody">
+        <div class="q">
+          <div class="qTitle">
+            <h3>0〜2週：パイロット（10〜30名）</h3>
+            <small>「使う部署」を選ぶのが9割</small>
+          </div>
+          <ul class="note" style="margin:0">
+            <li>部署候補：経営企画/総務/人事/営業企画/情報システム（“文章と調査”が多いところ）</li>
+            <li>守り：入力禁止（個人情報・顧客機密・契約文面の貼り付け等）を明文化</li>
+            <li>攻め：週1で「15分Tips」＋「自部署の成功例」共有（まず“真似”から）</li>
+          </ul>
+        </div>
+
+        <div class="q">
+          <div class="qTitle">
+            <h3>3〜6週：勝ち筋の確定（成果指標を固定）</h3>
+            <small>“便利”ではなく“何分浮いたか”で語る</small>
+          </div>
+          <ul class="note" style="margin:0">
+            <li>指標例：作業時間削減（分）、再作業/ミスの減少、問い合わせ対応件数、議事録作成時間、見積/提案の作成時間</li>
+            <li>ユースケースは「テンプレ化」する（プロンプト例・注意点・出力例）</li>
+            <li>部門別に「入れてよいデータ/ダメなデータ」を運用で分ける</li>
+          </ul>
+        </div>
+
+        <div class="q">
+          <div class="qTitle">
+            <h3>7〜12週：全社展開（定着の仕組み化）</h3>
+            <small>“研修1回”で終わらせない</small>
+          </div>
+          <ul class="note" style="margin:0">
+            <li>月1：社内AIオフィスアワー（質問会）</li>
+            <li>週1：ユースケース共有（Slack/Teamsで1投稿）</li>
+            <li>四半期：見直し（禁止ルールの更新／成功例の横展開／不要機能のOFF）</li>
+          </ul>
+        </div>
+
+        <div class="q" style="border-style:dashed">
+          <div class="qTitle">
+            <h3>最初に配る「社内ルール」ひな形（超短縮）</h3>
+            <small>5分で読める長さが正義</small>
+          </div>
+          <ol class="note" style="margin:0">
+            <li><b>入力禁止：</b>個人情報、顧客秘密、未公開の契約・価格、機密図面、ID/パスワード</li>
+            <li><b>OK例：</b>文章の下書き、要約、社内規程の“公開範囲”の検索、表現の改善、議事録の整形</li>
+            <li><b>出力は鵜呑みにしない：</b>法務/労務/税務/安全に関する内容は必ず確認</li>
+            <li><b>社外共有：</b>AI出力をそのまま顧客へ送る前に、必ず人が最終チェック</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sources -->
+    <footer id="sources" class="reveal">
+      <h2>Sources（根拠リンク：2026-02-05時点で確認）</h2>
+      <div>
+        このHTMLはGitHubで公開される前提のため、<b>外部ライブラリ不使用</b>、根拠は下記に集約しています。<br/>
+        価格・提供条件は頻繁に変わるため、導入前に必ず公式ページで再確認してください。
+      </div>
+
+      <div class="src">
+        <a href="https://help.openai.com/en/articles/9903489-data-residency-and-inference-residency-for-chatgpt" target="_blank" rel="noreferrer">
+          <b>OpenAI：ChatGPTのデータレジデンシー（日本を含む対応地域）</b>
+          <span>データ保管（at rest）地域、推論レジデンシー、制限事項など</span>
+        </a>
+        <a href="https://help.openai.com/en/articles/5722486-how-your-data-is-used-to-improve-model-performance" target="_blank" rel="noreferrer">
+          <b>OpenAI：Business/Enterpriseは既定で学習利用しない</b>
+          <span>「By default, we do not train … for business users」等の方針</span>
+        </a>
+        <a href="https://openai.com/business/chatgpt-pricing/" target="_blank" rel="noreferrer">
+          <b>OpenAI：ChatGPT Business/Enterprise 機能比較（SSO・SCIM等）</b>
+          <span>管理機能、セキュリティ、データレジデンシー対応など</span>
+        </a>
+        <a href="https://workspace.google.com/pricing" target="_blank" rel="noreferrer">
+          <b>Google：Workspaceプラン/価格（地域で表示が変わります）</b>
+          <span>Business/Enterpriseプランの公式一覧</span>
+        </a>
+        <a href="https://support.google.com/a/answer/15706919?hl=en" target="_blank" rel="noreferrer">
+          <b>Google：Workspaceの生成AI（Gemini）に関するプライバシー</b>
+          <span>顧客データを学習に使わない旨（許可/指示がない限り）</span>
+        </a>
+        <a href="https://support.google.com/a/answer/14313033?hl=en" target="_blank" rel="noreferrer">
+          <b>Google：Workspaceのデータリージョン（US/EU等）</b>
+          <span>データリージョンでカバーされる範囲/地域の説明</span>
+        </a>
+        <a href="https://cloud.google.com/blog/products/ai-machine-learning/introducing-gemini-enterprise" target="_blank" rel="noreferrer">
+          <b>Google Cloud：Gemini Enterprise（概要）</b>
+          <span>企業向け“front door for AI”としての説明</span>
+        </a>
+        <a href="https://techcrunch.com/2025/10/09/google-ramps-up-its-ai-in-the-workplace-ambitions-with-gemini-enterprise/" target="_blank" rel="noreferrer">
+          <b>TechCrunch：Gemini Business/Enterpriseの席課金（参考）</b>
+          <span>例：Business $21/席/月、Enterprise $30/席/月（発表時点）</span>
+        </a>
+      </div>
+
+      <div class="tiny">
+        免責：本ページは意思決定の叩き台です。法務・労務・個人情報・安全衛生などの高リスク領域は、専門家と公式ドキュメントを優先してください。<br/>
+        また、AIの出力は誤りを含む可能性があります。最終判断・外部提出物は必ず人が確認してください。
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // --- helpers ---
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+    const state = {
+      chat: 0,
+      gem: 0,
+      reasons: [],
+    };
+
+    const maxScore = 24; // rough cap for bars (auto adjusted later)
+
+    function fmtMoney(amountUSD, currency){
+      const n = isFinite(amountUSD) ? amountUSD : 0;
+      if(currency === "JPY"){
+        // Very rough conversion. Edit to your org's rate if you want.
+        const rate = 150; // placeholder
+        const jpy = Math.round(n * rate);
+        return "¥" + jpy.toLocaleString("ja-JP");
+      }
+      return "$" + n.toFixed(2);
+    }
+
+    function calc(){
+      let chat=0, gem=0;
+      const reasons = [];
+
+      $$('input[type="radio"]:checked').forEach(r => {
+        chat += Number(r.dataset.chat || 0);
+        gem  += Number(r.dataset.gem  || 0);
+        const rc = (r.dataset.reasonChat || "").trim();
+        const rg = (r.dataset.reasonGem  || "").trim();
+        if(rc) reasons.push({who:"chat", text: rc});
+        if(rg) reasons.push({who:"gem", text: rg});
+      });
+
+      state.chat = chat;
+      state.gem = gem;
+
+      // reasons de-dup (text based)
+      const seen = new Set();
+      state.reasons = reasons.filter(x => {
+        const k = x.text;
+        if(seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+
+      paint();
+      calcCost();
+    }
+
+    function paint(){
+      // Update numbers
+      $("#scoreChat").textContent = String(state.chat);
+      $("#scoreGem").textContent  = String(state.gem);
+
+      // Bars
+      const cap = Math.max(maxScore, state.chat, state.gem, 1);
+      const wChat = Math.min(100, (state.chat / cap) * 100);
+      const wGem  = Math.min(100, (state.gem  / cap) * 100);
+
+      requestAnimationFrame(() => {
+        $("#barChat").style.width = wChat.toFixed(1) + "%";
+        $("#barGem").style.width  = wGem.toFixed(1) + "%";
+      });
+
+      // Recommendation logic
+      const diff = state.chat - state.gem;
+
+      // Is suite = mixed?
+      const isMixed = $$('input[name="suite"]').some(r => r.checked && (Number(r.dataset.chat)===2 && Number(r.dataset.gem)===2));
+
+      let title = "";
+      let body = "";
+
+      if(Math.abs(diff) <= 2 || (isMixed && Math.abs(diff) <= 4)){
+        title = "推奨：両方（併用）を“役割分担”で導入";
+        body  =
+          "スコアが拮抗しています。社内のツール環境や業務が分散している可能性が高いので、" +
+          "①日常導線（メール/文書）に刺さる方 と、②横断型の調査・作成に強い方 を分けて導入し、" +
+          "3〜6週間で『どの部署がどちらで成果が出るか』を確定させるのが最短です。";
+      }else if(diff >= 3){
+        title = "推奨：ChatGPT を社内汎用AIの“主軸”に";
+        body =
+          "横断型のタスク（要約・調査・分析・ナレッジ検索）や、多アプリ接続を軸にした展開がしやすい構図です。" +
+          "まずは10〜30名パイロットでユースケースをテンプレ化し、成功例を横展開すると浸透が加速します。";
+      }else{
+        title = "推奨：Gemini を社内汎用AIの“主軸”に";
+        body =
+          "Workspaceの“いつもの画面”でAIが出てくる導線が強く、研修コストを抑えつつ習慣化しやすい構図です。" +
+          "最初はメール/文書/会議要約など“日常頻度が高い”領域で成果を出し、段階的に対象を広げるのが安全です。";
+      }
+
+      $("#recoTitle").textContent = title;
+      $("#recoBody").textContent  = body;
+
+      // Reasons
+      const whyList = $("#whyList");
+      const whyCount = $("#whyCount");
+
+      if(state.reasons.length === 0){
+        whyList.innerHTML = "<em>まだありません。</em>";
+        whyCount.textContent = "0件";
+      }else{
+        whyCount.textContent = state.reasons.length + "件";
+        const items = state.reasons.slice(0, 8).map(x => {
+          const chip = x.who === "chat" ? "ChatGPT" : "Gemini";
+          const color = x.who === "chat" ? "var(--c-chat)" : "var(--c-gem)";
+          return `
+            <div style="display:flex;gap:10px;align-items:flex-start;margin:0 0 8px">
+              <span style="font-size:11px;border:1px solid var(--line);padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.04);color:color-mix(in srgb, ${color} 86%, var(--text));white-space:nowrap">${chip}</span>
+              <span>${escapeHtml(x.text)}</span>
+            </div>`;
+        }).join("");
+        whyList.innerHTML = items + (state.reasons.length > 8 ? `<div class="note" style="margin:8px 0 0">…ほか${state.reasons.length-8}件</div>` : "");
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // --- Cost calculator ---
+    function calcCost(){
+      const users = Math.max(1, Number($("#users").value || 150));
+      const currency = $("#currency").value;
+
+      const chatPlan = $("#chatPlan").value;
+      const gemPlan  = $("#gemPlan").value;
+
+      let chatSeat = Math.max(0, Number($("#chatSeat").value || 0));
+      let gemSeat  = Math.max(0, Number($("#gemSeat").value || 0));
+
+      // Plan presets
+      if(gemPlan === "workspaceIncluded"){
+        gemSeat = 0;
+        $("#gemSeat").value = "0";
+      }else if(gemPlan === "geminiEnterprise"){
+        if($("#gemSeat").value === "21" || $("#gemSeat").value === "0") $("#gemSeat").value = "30";
+        gemSeat = Math.max(0, Number($("#gemSeat").value || 30));
+      }else if(gemPlan === "geminiBusiness"){
+        if($("#gemSeat").value === "0") $("#gemSeat").value = "21";
+        gemSeat = Math.max(0, Number($("#gemSeat").value || 21));
+      }
+
+      if(chatPlan === "enterprise"){
+        $("#chatSeat").placeholder = "要見積（入力してください）";
+      }else{
+        if($("#chatSeat").value === "" || $("#chatSeat").value === "0") $("#chatSeat").value = "30";
+        chatSeat = Math.max(0, Number($("#chatSeat").value || 30));
+      }
+
+      const chatMonthly = users * chatSeat;
+      const gemMonthly  = users * gemSeat;
+      const bothMonthly = chatMonthly + gemMonthly;
+
+      $("#outChat").textContent = fmtMoney(chatMonthly, currency);
+      $("#outGem").textContent  = fmtMoney(gemMonthly, currency);
+      $("#outBoth").textContent = fmtMoney(bothMonthly, currency);
+
+      const note = $("#costNote");
+      let noteText = "※デフォルトは参考値です。実際の価格は地域/契約/割引で変動します。";
+      if(chatPlan === "enterprise"){
+        noteText += " ChatGPT Enterpriseは見積になることが多いので、席単価を入力してください。";
+      }
+      if(gemPlan === "workspaceIncluded"){
+        noteText += " WorkspaceにGeminiが組み込まれている前提なら増分は0として扱っています。";
+      }else if(gemPlan === "geminiBusiness"){
+        noteText += " Gemini Businessの参考：$21/席/月（発表時点の報道）。";
+      }else{
+        noteText += " Gemini Enterpriseの参考：$30/席/月（発表時点の報道）。";
+      }
+      note.textContent = noteText;
+    }
+
+    // --- Sample presets ---
+    function setRadio(name, idx){
+      const arr = $$(`input[name="${name}"]`);
+      if(arr[idx]) arr[idx].checked = true;
+    }
+
+    function sampleM365(){
+      setRadio("suite", 0);
+      setRadio("tasks", 0);
+      setRadio("leader", 2);
+      setRadio("govern", 2);
+      setRadio("training", 1);
+      setRadio("budget", 2);
+      $("#gemPlan").value = "geminiBusiness";
+      $("#gemSeat").value = "21";
+      $("#chatPlan").value = "business";
+      $("#chatSeat").value = "30";
+      calc();
+      window.scrollTo({top: 0, behavior: "smooth"});
+    }
+
+    function sampleWS(){
+      setRadio("suite", 1);
+      setRadio("tasks", 1);
+      setRadio("leader", 2);
+      setRadio("govern", 1);
+      setRadio("training", 2);
+      setRadio("budget", 1);
+      $("#gemPlan").value = "workspaceIncluded";
+      $("#chatPlan").value = "business";
+      $("#chatSeat").value = "30";
+      calc();
+      window.scrollTo({top: 0, behavior: "smooth"});
+    }
+
+    function resetAll(){
+      // reset radios to defaults (first option in each section)
+      $$('input[type="radio"]').forEach(r => r.checked = false);
+      $$('section.q').forEach(q => {
+        const first = q.querySelector('input[type="radio"]');
+        if(first) first.checked = true;
+      });
+
+      $("#users").value = "150";
+      $("#currency").value = "USD";
+      $("#chatPlan").value = "business";
+      $("#chatSeat").value = "30";
+      $("#gemPlan").value = "workspaceIncluded";
+      $("#gemSeat").value = "0";
+
+      calc();
+      window.scrollTo({top: 0, behavior: "smooth"});
+    }
+
+    // --- Reveal on scroll ---
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){
+        if(e.isIntersecting) e.target.classList.add("on");
+      }
+    }, {threshold: 0.12});
+    $$(".reveal").forEach(el => io.observe(el));
+
+    // --- events ---
+    document.addEventListener("change", (e)=>{
+      if(e.target && (e.target.matches('input[type="radio"]') || e.target.matches("#users,#currency,#chatPlan,#chatSeat,#gemPlan,#gemSeat"))){
+        calc();
+      }
+    });
+
+    $("#btnReset").addEventListener("click", resetAll);
+    $("#btnSampleM365").addEventListener("click", sampleM365);
+    $("#btnSampleWS").addEventListener("click", sampleWS);
+
+    // show "as of"
+    $("#asOfText").textContent = "（最終更新：2026-02-05）";
+
+    // initial
+    calc();
+  </script>
+</body>
+</html>
