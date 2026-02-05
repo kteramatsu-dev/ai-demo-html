@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企業向けAI導入診断ツール - ChatGPT vs Gemini</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Meirio, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .intro {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            border-left: 5px solid #667eea;
+        }
+
+        .question-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .question-section:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-5px);
+        }
+
+        .question-title {
+            font-size: 1.4em;
+            color: #1e3c72;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .question-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+        }
+
+        .option {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateX(10px);
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .option-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .option-desc {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .score-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .result-button {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .results {
+            display: none;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        .score-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .score-card {
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-card.chatgpt {
+            background: linear-gradient(135deg, #10a37f15 0%, #10a37f25 100%);
+            border: 3px solid #10a37f;
+        }
+
+        .score-card.gemini {
+            background: linear-gradient(135deg, #4285f415 0%, #4285f425 100%);
+            border: 3px solid #4285f4;
+        }
+
+        .score-card.winner {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .ai-name {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .chatgpt .ai-name {
+            color: #10a37f;
+        }
+
+        .gemini .ai-name {
+            color: #4285f4;
+        }
+
+        .score-number {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 20px 0;
+            animation: countUp 1s ease-out;
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .recommendation {
+            background: #fff3cd;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #ffc107;
+            margin-bottom: 30px;
+        }
+
+        .recommendation h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .recommendation-content {
+            color: #333;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .details-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .details-section h3 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .detail-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .detail-item h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .detail-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .winner-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 10px;
+            animation: shine 2s ease-in-out infinite;
+        }
+
+        @keyframes shine {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
+            }
+        }
+
+        .reset-button {
+            background: #6c757d;
+            margin-top: 20px;
+        }
+
+        .reset-button:hover {
+            background: #5a6268;
+        }
+
+        .cost-info {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .cost-info h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .both-option {
+            background: linear-gradient(135deg, #ff6b6b15 0%, #4ecdc425 100%);
+            border: 3px dashed #ff6b6b;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .both-option h3 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .score-display {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 企業向けAI導入診断ツール</h1>
+            <p class="subtitle">ChatGPT vs Gemini - あなたの会社に最適なAIを診断</p>
+        </header>
+
+        <div class="content">
+            <div class="intro">
+                <h2>📊 診断について</h2>
+                <p>150名規模の企業を想定し、7つの観点から最適なAIツールを診断します。各質問に答えることで、ChatGPTとGeminiのどちらがより適しているか、あるいは両方導入すべきかを判定します。</p>
+            </div>
+
+            <div id="questions">
+                <!-- Question 1 -->
+                <div class="question-section">
+                    <div class="question-title">
+                        <span class="question-number">1</span>
+                        <span>トップの意向</span>
+                    </div>
+                    <div class="options">
+                        <div class="option" data-question="1" data-chatgpt="10" data-gemini="0">
+                            <div class="option-label">OpenAI/Microsoft寄り <span class="score-badge">ChatGPT +10</span></div>
+                            <div class="option-desc">経営陣がOpenAIやMicrosoftとの連携を重視している</div>
+                        </div>
+                        <div class="option" data-question="1" data-chatgpt="0" data-gemini="10">
+                            <div class="option-label">Google寄り <span class="score-badge">Gemini +10</span></div>
+                            <div class="option-desc">経営陣がGoogleのエコシステムを重視している</div>
+                        </div>
+                        <div class="option" data-question="1" data-chatgpt="5" data-gemini="5">
+                            <div class="option-label">特に指定なし <span class="score-badge">両方 +5</span></div>
+                            <div class="option-desc">特定のベンダーへの依存を避けたい、または中立的</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 2 -->
+                <div class="question-section">
+                    <div class="question-title">
+                        <span class="question-number">2</span>
+                        <span>社内IT環境</span>
+                    </div>
+                    <div class="options">
+                        <div class="option" data-question="2" data-chatgpt="15" data-gemini="0">
+                            <div class="option-label">Microsoft 365環境 <span class="score-badge">ChatGPT +15</span></div>
+                            <div class="option-desc">Teams、Outlook、SharePointなどを主要ツールとして使用</div>
+                        </div>
+                        <div class="option" data-question="2" data-chatgpt="0" data-gemini="15">
+                            <div class="option-label">Google Workspace環境 <span class="score-badge">Gemini +15</span></div>
+                            <div class="option-desc">Gmail、Google Drive、Google Docsなどを主要ツールとして使用</div>
+                        </div>
+                        <div class="option" data-question="2" data-chatgpt="5" data-gemini="5">
+                            <div class="option-label">混在環境 <span class="score-badge">両方 +5</span></div>
+                            <div class="option-desc">両方のツールを使用、または別のグループウェア</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="question-section">
+                    <div class="question-title">
+                        <span class="question-number">3</span>
+                        <span>主な作業内容</span>
+                    </div>
+                    <div class="options">
+                        <div class="option" data-question="3" data-chatgpt="12" data-gemini="8">
+                            <div class="option-label">文章作成・創造的作業 <span class="score-badge">ChatGPT +12 / Gemini +8</span></div>
+                            <div class="option-desc">マーケティング、コンテンツ制作、企画書作成など</div>
+                        </div>
+                        <div class="option" data-question="3" data-chatgpt="8" data-gemini="12">
+                            <div class="option-label">データ分析・技術作業 <span class="score-badge">ChatGPT +8 / Gemini +12</span></div>
+                            <div class="option-desc">データ分析、プログラミング、技術文書作成など</div>
+                        </div>
+                        <div class="option" data-question="3" data-chatgpt="10" data-gemini="10">
+                            <div class="option-label">幅広い業務 <span class="score-badge">両方 +10</span></div>
+                            <div class="option-desc">部署により様々な用途がある</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 4 -->
+                <div class="question-section">
+                    <div class="question-title">
+                        <span class="question-number">4</span>
+                        <span>データセンター・セキュリティ要件</span>
+                    </div>
+                    <div class="options">
+                        <div class="option" data-question="4" data-chatgpt="10" data-gemini="8">
+                            <div class="option-label">高いセキュリティが必須 <span class="score-badge">ChatGPT +10 / Gemini +8</span></div>
+                            <div class="option-desc">機密情報を扱うため、エンタープライズ版が必要</div>
+                        </div>
+                        <div class="option" data-question="4" data-chatgpt="5" data-gemini="7">
+                            <div class="option-label">標準的なセキュリティで十分 <span class="score-badge">ChatGPT +5 / Gemini +7</span></div>
+                            <div class="option-desc">一般的なビジネス用途で、通常のプランで対応可能</div>
+                        </div>
+                        <div class="option" data-question="4" data-chatgpt="3" data-gemini="5">
+                            <div class="option-label">特に要件なし <span class="score-badge">ChatGPT +3 / Gemini +5</span></div>
+                            <div class="option-desc">機密情報を扱わない、または公開情報のみ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 5 -->
+                <div class="question-section">
+                    <div class="question-title">
+                        <span class="question-number">5</span>
+                        <span>社内研修・サポート体制</span>
+                    </div>
+                    <div class="options">
+                        <div class="option" data-question="5" data-chatgpt="8" data-gemini="5">
+                            <div class="option-label">充実した研修を予定 <span class="score-badge">ChatGPT +8 / Gemini +5</span></div>
+                            <div class="option-desc">専任の研修担当がいて、段階的な導入を計画</div>
+                        </div>
+                        <div class="option" data-question="5" data-chatgpt="6" data-gemini="8">
+                            <div class="option-label">最小限の研修 <span class="score-badge">ChatGPT +6 / Gemini +8</span></div>
+                            <div class="option-desc">簡単な説明会のみ、各自で習得してもらう</div>
+                        </div>
+                        <div class="option" data-question="5" data-chatgpt="10" data-gemini="10">
+                            <div class="option-label">段階的な導入 <span class="score-badge">両方 +10</span></div>
+                            <div class="option-desc">まずは一部部署で試験導入し、徐々に拡大</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 6 -->
+                <div class="question-section">
+                    <div class="question-title">
+                        <span class="question-number">6</span>
+                        <span>予算・コスト感</span>
+                    </div>
+                    <div class="options">
+                        <div class="option" data-question="6" data-chatgpt="8" data-gemini="10">
+                            <div class="option-label">コストを重視 <span class="score-badge">ChatGPT +8 / Gemini +10</span></div>
+                            <div class="option-desc">できるだけ低コストで導入したい（月額約2,000円/人まで）</div>
+                        </div>
+                        <div class="option" data-question="6" data-chatgpt="10" data-gemini="8">
+                            <div class="option-label">機能を重視 <span class="score-badge">ChatGPT +10 / Gemini +8</span></div>
+                            <div class="option-desc">コストより性能を優先（月額約3,000円/人まで許容）</div>
+                        </div>
+                        <div class="option" data-question="6" data-chatgpt="12" data-gemini="12">
+                            <div class="option-label">十分な予算がある <span class="score-badge">両方 +12</span></div>
+                            <div class="option-desc">複数ツール導入も検討可能（月額5,000円/人程度まで）</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 7 -->
+                <div class="question-section">
+                    <div class="question-title">
+                        <span class="question-number">7</span>
+                        <span>その他の重視点</span>
+                    </div>
+                    <div class="options">
+                        <div class="option" data-question="7" data-chatgpt="10" data-gemini="5">
+                            <div class="option-label">実績・知名度 <span class="score-badge">ChatGPT +10 / Gemini +5</span></div>
+                            <div class="option-desc">多くの企業が導入している実績を重視</div>
+                        </div>
+                        <div class="option" data-question="7" data-chatgpt="5" data-gemini="10">
+                            <div class="option-label">既存ツールとの統合性 <span class="score-badge">ChatGPT +5 / Gemini +10</span></div>
+                            <div class="option-desc">現在使用中のツールとシームレスに連携したい</div>
+                        </div>
+                        <div class="option" data-question="7" data-chatgpt="8" data-gemini="8">
+                            <div class="option-label">多様な用途への対応 <span class="score-badge">両方 +8</span></div>
+                            <div class="option-desc">様々な部署・用途で柔軟に使いたい</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-button">
+                <button onclick="calculateResults()">診断結果を見る 🎯</button>
+            </div>
+
+            <div id="results" class="results">
+                <h2 style="text-align: center; color: #1e3c72; margin-bottom: 30px; font-size: 2em;">📊 診断結果</h2>
+                
+                <div class="score-display">
+                    <div class="score-card chatgpt" id="chatgpt-card">
+                        <div class="ai-name">ChatGPT</div>
+                        <div class="score-number" id="chatgpt-score">0</div>
+                        <div style="color: #666;">ポイント</div>
+                    </div>
+                    <div class="score-card gemini" id="gemini-card">
+                        <div class="ai-name">Gemini</div>
+                        <div class="score-number" id="gemini-score">0</div>
+                        <div style="color: #666;">ポイント</div>
+                    </div>
+                </div>
+
+                <div class="recommendation" id="recommendation">
+                    <!-- 診断結果がここに表示されます -->
+                </div>
+
+                <div class="details-section">
+                    <h3>💡 選択理由の詳細</h3>
+                    <div id="details-content">
+                        <!-- 詳細がここに表示されます -->
+                    </div>
+                </div>
+
+                <div class="result-button">
+                    <button class="reset-button" onclick="resetQuiz()">もう一度診断する 🔄</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selections = {};
+
+        // 選択肢をクリックしたときの処理
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', function() {
+                const question = this.dataset.question;
+                
+                // 同じ質問の他の選択肢の選択を解除
+                document.querySelectorAll(`[data-question="${question}"]`).forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // この選択肢を選択状態に
+                this.classList.add('selected');
+                
+                // 選択を保存
+                selections[question] = {
+                    chatgpt: parseInt(this.dataset.chatgpt),
+                    gemini: parseInt(this.dataset.gemini)
+                };
+            });
+        });
+
+        function calculateResults() {
+            // 全ての質問に回答したかチェック
+            if (Object.keys(selections).length < 7) {
+                alert('すべての質問に回答してください。');
+                return;
+            }
+
+            let chatgptScore = 0;
+            let geminiScore = 0;
+
+            // スコアを計算
+            for (let key in selections) {
+                chatgptScore += selections[key].chatgpt;
+                geminiScore += selections[key].gemini;
+            }
+
+            // スコアを表示
+            document.getElementById('chatgpt-score').textContent = chatgptScore;
+            document.getElementById('gemini-score').textContent = geminiScore;
+
+            // 推奨事項を生成
+            generateRecommendation(chatgptScore, geminiScore);
+
+            // 結果セクションを表示
+            document.getElementById('results').style.display = 'block';
+            
+            // 結果までスクロール
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+            // 勝者を強調
+            const chatgptCard = document.getElementById('chatgpt-card');
+            const geminiCard = document.getElementById('gemini-card');
+            
+            chatgptCard.classList.remove('winner');
+            geminiCard.classList.remove('winner');
+
+            const diff = Math.abs(chatgptScore - geminiScore);
+            
+            if (diff <= 10) {
+                chatgptCard.classList.add('winner');
+                geminiCard.classList.add('winner');
+            } else if (chatgptScore > geminiScore) {
+                chatgptCard.classList.add('winner');
+            } else {
+                geminiCard.classList.add('winner');
+            }
+        }
+
+        function generateRecommendation(chatgptScore, geminiScore) {
+            const diff = Math.abs(chatgptScore - geminiScore);
+            let recommendation = '';
+            let details = '';
+
+            if (diff <= 10) {
+                // 両方導入を推奨
+                recommendation = `
+                    <h3>🎯 推奨：両方導入（ハイブリッド戦略）</h3>
+                    <div class="recommendation-content">
+                        <p><strong>スコア差が${diff}ポイントと僅差のため、両方のAIツールを導入することをお勧めします。</strong></p>
+                        <br>
+                        <p><strong>【両方導入をお勧めする理由】</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>✅ <strong>リスク分散：</strong>一つのベンダーに依存しないことで、サービス停止やポリシー変更のリスクを軽減</li>
+                            <li>✅ <strong>用途別最適化：</strong>創造的作業はChatGPT、データ分析はGeminiなど、得意分野で使い分け</li>
+                            <li>✅ <strong>社員の選択肢：</strong>個人の好みや業務特性に応じて最適なツールを選択可能</li>
+                            <li>✅ <strong>競争による進化：</strong>両社の競争により、常に最新の機能を享受できる</li>
+                            <li>✅ <strong>学習効果：</strong>複数のAIツールを使うことで、AI活用スキル全般が向上</li>
+                        </ul>
+                        <br>
+                        <p><strong>【導入プラン例】</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>📌 全社員にChatGPT Team（月額約$30/人）を基本ツールとして提供</li>
+                            <li>📌 データ分析部門やGoogle Workspace利用部門にはGemini Advanced（月額約$20/人）を追加</li>
+                            <li>📌 段階的導入：まず50名でChatGPT、30名でGeminiを試験導入し、3ヶ月後に評価・拡大</li>
+                        </ul>
+                    </div>
+                    <div class="cost-info">
+                        <h4>💰 想定コスト（150名規模）</h4>
+                        <p><strong>パターンA（全員両方）：</strong>月額約75万円（$50/人 × 150名）</p>
+                        <p><strong>パターンB（役割分担）：</strong>月額約50万円（ChatGPT 100名 + Gemini 50名）</p>
+                        <p><strong>パターンC（段階導入）：</strong>初期月額約25万円 → 段階的に拡大</p>
+                    </div>
+                `;
+
+                details = `
+                    <div class="detail-item">
+                        <h4>🎯 ハイブリッド戦略の具体的活用例</h4>
+                        <p><strong>営業部門：</strong>ChatGPTで提案書・企画書作成、Geminiで顧客データ分析</p>
+                        <p><strong>開発部門：</strong>ChatGPTでコードレビュー、Geminiでバグ分析・パフォーマンス最適化</p>
+                        <p><strong>マーケティング部門：</strong>ChatGPTでコンテンツ作成、Geminiで効果測定・分析</p>
+                        <p><strong>経営企画：</strong>ChatGPTで戦略文書作成、Geminiで市場データ分析</p>
+                    </div>
+                    <div class="detail-item">
+                        <h4>📋 導入ステップ</h4>
+                        <p><strong>Phase 1（1-2ヶ月）：</strong>パイロット部門で両方を試験導入、使用感・効果を評価</p>
+                        <p><strong>Phase 2（3-4ヶ月）：</strong>部門別最適配置を決定し、全社展開開始</p>
+                        <p><strong>Phase 3（5-6ヶ月）：</strong>利用状況を分析し、ライセンス配分を最適化</p>
+                    </div>
+                    <div class="detail-item">
+                        <h4>⚠️ 注意点</h4>
+                        <p>・管理コストが増加するため、IT部門のサポート体制を強化する必要があります</p>
+                        <p>・セキュリティポリシーを両ツールで統一し、情報漏洩リスクを管理してください</p>
+                        <p>・社員が混乱しないよう、用途別のガイドラインを明確に作成しましょう</p>
+                    </div>
+                `;
+
+            } else if (chatgptScore > geminiScore) {
+                // ChatGPT推奨
+                recommendation = `
+                    <h3>🎯 推奨：ChatGPT</h3>
+                    <div class="recommendation-content">
+                        <p><strong>${chatgptScore}ポイント vs ${geminiScore}ポイント（差: ${diff}ポイント）</strong></p>
+                        <br>
+                        <p>あなたの会社には<strong>ChatGPT</strong>の導入が最適です。</p>
+                        <div class="winner-badge">🏆 ChatGPT が最適</div>
+                        <br><br>
+                        <p><strong>【ChatGPTをお勧めする理由】</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>✅ Microsoft 365環境との優れた統合性（Teams、Outlookなど）</li>
+                            <li>✅ 創造的なコンテンツ生成や文章作成に強み</li>
+                            <li>✅ 豊富な企業導入実績と充実したサポート</li>
+                            <li>✅ ChatGPT Enterpriseによる高度なセキュリティとカスタマイズ</li>
+                            <li>✅ プラグインやGPTsによる拡張性</li>
+                        </ul>
+                        <br>
+                        <p><strong>【推奨プラン】</strong></p>
+                        <p>💼 <strong>ChatGPT Team：</strong>月額$30/人（約4,500円）× 150名 = 月額約67.5万円</p>
+                        <p>💼 <strong>ChatGPT Enterprise：</strong>カスタム価格（要問合せ）- より高度なセキュリティとカスタマイズが必要な場合</p>
+                    </div>
+                    <div class="cost-info">
+                        <h4>💰 想定年間コスト</h4>
+                        <p><strong>ChatGPT Team：</strong>約810万円/年（67.5万円 × 12ヶ月）</p>
+                        <p>※段階的導入の場合、初期は30-50名からスタートし、月額20-34万円程度から開始可能</p>
+                    </div>
+                `;
+
+                details = `
+                    <div class="detail-item">
+                        <h4>💡 ChatGPTの主な強み</h4>
+                        <p><strong>文章生成：</strong>マーケティングコピー、企画書、メール文など高品質な文章作成</p>
+                        <p><strong>創造性：</strong>アイデア出し、ブレインストーミング、クリエイティブな提案</p>
+                        <p><strong>対話能力：</strong>自然な会話形式でのサポート、カスタマーサポート用途</p>
+                        <p><strong>コーディング：</strong>プログラミング支援、コードレビュー、デバッグ</p>
+                    </div>
+                    <div class="detail-item">
+                        <h4>🔧 Microsoft環境との統合</h4>
+                        <p>・<strong>Microsoft Copilot：</strong>ChatGPTの技術を使ったOffice統合（別製品）</p>
+                        <p>・<strong>Azure OpenAI Service：</strong>企業独自のAIアプリケーション構築が可能</p>
+                        <p>・<strong>Teams連携：</strong>チャット内でのAI活用がスムーズ</p>
+                    </div>
+                    <div class="detail-item">
+                        <h4>📋 導入時のポイント</h4>
+                        <p>・まずはTeamプランで小規模導入し、効果を確認してから全社展開</p>
+                        <p>・社内ガイドライン（機密情報の入力禁止など）を事前に策定</p>
+                        <p>・活用事例集を作成し、部門横断で共有する仕組みを構築</p>
+                    </div>
+                    <div class="both-option">
+                        <h3>🤔 Geminiも検討したい場合</h3>
+                        <p>Google Workspace利用部門や、データ分析を重視する部門には、Geminiを<strong>補助的に導入</strong>することも検討できます。主軸はChatGPTとし、特定用途でGeminiを併用するハイブリッド戦略も有効です。</p>
+                    </div>
+                `;
+
+            } else {
+                // Gemini推奨
+                recommendation = `
+                    <h3>🎯 推奨：Gemini</h3>
+                    <div class="recommendation-content">
+                        <p><strong>${geminiScore}ポイント vs ${chatgptScore}ポイント（差: ${diff}ポイント）</strong></p>
+                        <br>
+                        <p>あなたの会社には<strong>Gemini</strong>の導入が最適です。</p>
+                        <div class="winner-badge">🏆 Gemini が最適</div>
+                        <br><br>
+                        <p><strong>【Geminiをお勧めする理由】</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>✅ Google Workspaceとのシームレスな統合（Gmail、Docs、Sheetsなど）</li>
+                            <li>✅ データ分析や技術的なタスクに強み</li>
+                            <li>✅ コストパフォーマンスに優れる（月額約$20/人）</li>
+                            <li>✅ Googleの最新AI技術と検索機能の統合</li>
+                            <li>✅ 導入・学習コストが低く、直感的に使える</li>
+                        </ul>
+                        <br>
+                        <p><strong>【推奨プラン】</strong></p>
+                        <p>💼 <strong>Google One AI Premium（Gemini Advanced）：</strong>月額約$20/人（約3,000円）× 150名 = 月額約45万円</p>
+                        <p>💼 <strong>Google Workspace統合：</strong>既存のWorkspaceプランに追加可能</p>
+                    </div>
+                    <div class="cost-info">
+                        <h4>💰 想定年間コスト</h4>
+                        <p><strong>Gemini Advanced：</strong>約540万円/年（45万円 × 12ヶ月）</p>
+                        <p>※ChatGPT Teamと比較して年間約270万円のコスト削減が可能</p>
+                    </div>
+                `;
+
+                details = `
+                    <div class="detail-item">
+                        <h4>💡 Geminiの主な強み</h4>
+                        <p><strong>データ分析：</strong>Google Sheets連携により、データの可視化・分析が容易</p>
+                        <p><strong>検索統合：</strong>Google検索の最新情報を活用した回答生成</p>
+                        <p><strong>マルチモーダル：</strong>画像、動画、音声など多様な形式のデータ処理</p>
+                        <p><strong>コーディング：</strong>Python、JavaScript等のコード生成・最適化</p>
+                    </div>
+                    <div class="detail-item">
+                        <h4>🔧 Google Workspaceとの統合</h4>
+                        <p>・<strong>Gmail：</strong>メール下書き作成、要約、返信提案</p>
+                        <p>・<strong>Google Docs：</strong>文書作成支援、校正、翻訳</p>
+                        <p>・<strong>Google Sheets：</strong>データ分析、数式生成、グラフ作成</p>
+                        <p>・<strong>Google Slides：</strong>プレゼンテーション作成支援</p>
+                    </div>
+                    <div class="detail-item">
+                        <h4>📋 導入時のポイント</h4>
+                        <p>・既存のGoogle Workspaceアカウントでそのまま利用開始可能</p>
+                        <p>・段階的導入：まず各部門から5-10名選抜し、効果を検証</p>
+                        <p>・Google Workspace管理者権限で一括管理が可能</p>
+                        <p>・既存のWorkflowに組み込みやすく、導入障壁が低い</p>
+                    </div>
+                    <div class="both-option">
+                        <h3>🤔 ChatGPTも検討したい場合</h3>
+                        <p>創造的なコンテンツ作成やマーケティング部門など、文章生成を重視する部門には、ChatGPTを<strong>補助的に導入</strong>することも検討できます。主軸はGeminiとし、特定用途でChatGPTを併用するハイブリッド戦略も有効です。</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('recommendation').innerHTML = recommendation;
+            document.getElementById('details-content').innerHTML = details;
+        }
+
+        function resetQuiz() {
+            // 選択をリセット
+            selections = {};
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            // 結果を非表示
+            document.getElementById('results').style.display = 'none';
+
+            // トップにスクロール
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
